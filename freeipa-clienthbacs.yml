@@ -5,8 +5,15 @@
   become: false
   connection: local
   tasks:
+    - name: install msktutil
+      package:
+        name: msktutil
+        state: present
+
+    - name: add the HBACs for target client / users
     - shell: |
-        echo '{{ kinit_password }}' | kinit {{ kinit_user }}
+        TMPKEYTAB=$(mktemp)
+        msktutil update --verbose --use-service-account --account-name {{ kinit_user }} --old-account-password '{{ kinit_password }}' --dont-change-password --keytab $TMPKEYTAB --realm {{ auth_realm }} --server {{ ldap_server }}
         clients='{{ client_servers }}' 
         sshusers='{{ ssh_users }}'
         sudousers='{{ sudo_users }}'
