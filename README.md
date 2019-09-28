@@ -9,4 +9,5 @@ kinit_password
 client_servers
 ssh_users
 sudo_users
+target # server to initiate script
 ```

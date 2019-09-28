@@ -1,6 +1,6 @@
 ---
 - name: freeipa-clienthbacs
-  hosts: localhost
+  hosts: '{{ target }}'
   gather_facts: no
   become: false
   connection: local
