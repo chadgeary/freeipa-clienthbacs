@@ -65,3 +65,5 @@
             ipa hbactest --user=chad --host=$client --service=sudo-i --rule=sudo-i-$client
         done
       ignore_errors: yes
+      args:
+        executable: /bin/bash
