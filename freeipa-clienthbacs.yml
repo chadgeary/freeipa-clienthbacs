@@ -12,8 +12,8 @@
 
     - name: add the HBACs for target client / users
       shell: |
-        TMPKEYTAB=$(mktemp)
-        msktutil update --verbose --use-service-account --account-name {{ kinit_user }} --old-account-password '{{ kinit_password }}' --dont-change-password --keytab $TMPKEYTAB --realm {{ auth_realm }} --server {{ ldap_server }}
+        TMPKEYTABCACHE=$(mktemp)
+        echo '{{ kinit_password }}' | kinit {{ kinit_user }} -c $TMPKEYTAB
         clients='{{ client_servers }}' 
         sshusers='{{ ssh_users }}'
         sudousers='{{ sudo_users }}'
@@ -71,6 +71,8 @@
             ipa hbactest --user=chad --host=$client --service=sudo --rule=sudo-$client
             ipa hbactest --user=chad --host=$client --service=sudo-i --rule=sudo-i-$client
         done
+      # remove temporary keytab file
+      rm -f TMPKEYTAB
       ignore_errors: yes
       args:
         executable: /bin/bash
