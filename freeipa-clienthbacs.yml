@@ -13,7 +13,7 @@
     - name: add the HBACs for target client / users
       shell: |
         TMPKEYTABCACHE=$(mktemp)
-        echo '{{ kinit_password }}' | kinit {{ kinit_user }} -c $TMPKEYTAB
+        echo '{{ kinit_password }}' | kinit {{ kinit_user }} -c $TMPKEYTABCACHE
         clients='{{ client_servers }}' 
         sshusers='{{ ssh_users }}'
         sudousers='{{ sudo_users }}'
