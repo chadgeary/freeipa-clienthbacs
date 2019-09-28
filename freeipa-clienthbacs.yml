@@ -71,8 +71,8 @@
             ipa hbactest --user=chad --host=$client --service=sudo --rule=sudo-$client
             ipa hbactest --user=chad --host=$client --service=sudo-i --rule=sudo-i-$client
         done
-      # remove temporary keytab file
-      rm -f TMPKEYTAB
+        # remove temporary keytab file
+        rm -f TMPKEYTAB
       ignore_errors: yes
       args:
         executable: /bin/bash
