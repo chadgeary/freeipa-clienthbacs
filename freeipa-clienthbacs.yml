@@ -1,0 +1,67 @@
+---
+- name: freeipa-clienthbacs
+  hosts: localhost
+  gather_facts: no
+  become: false
+  connection: local
+  tasks:
+    - shell: |
+        echo '{{ kinit_password }}' | kinit {{ kinit_user }}
+        clients='{{ client_servers }}' 
+        sshusers='{{ ssh_users }}'
+        sudousers='{{ sudo_users }}'
+        for client in $clients
+        do
+            # add host to sudo-admins
+            ipa sudorule-add-host sudo-admins --hosts=$client
+            
+            # ensure service exists
+            ipa hbacsvc-add sshd
+            
+            # rule (allow_fqdn)
+            ipa hbacrule-add sshd-$client
+            
+            # add service to rule
+            ipa hbacrule-add-service sshd-$client --hbacsvcs=sshd
+            
+            # add host to rule
+            ipa hbacrule-add-host sshd-$client --hosts=$client
+            
+            # add user(s) to rule
+            for sshuser in $sshusers
+            do
+                ipa hbacrule-add-user sshd-$client --user=$sshuser
+            done
+            
+            # ensure service exists (the sudo in /etc/pam.d/sudo)
+            ipa hbacsvc-add sudo
+            ipa hbacsvc-add sudo-i
+            
+            # rule (allow_fqdn)
+            ipa hbacrule-add sudo-$client
+            ipa hbacrule-add sudo-i-$client
+            
+            # add service to rule
+            ipa hbacrule-add-service sudo-$client --hbacsvcs=sudo
+            ipa hbacrule-add-service sudo-i-$client --hbacsvcs=sudo-i
+            
+            # add host to rule
+            ipa hbacrule-add-host sudo-$client --hosts=$client
+            ipa hbacrule-add-host sudo-i-$client --hosts=$client
+            
+            # add user(s) to rule
+            for sudouser in $sudousers
+            do
+                ipa hbacrule-add-user sudo-$client --user=$sudouser
+                ipa hbacrule-add-user sudo-i-$client --user=$sudouser
+            done
+            
+            # validation with first user in sshusers and sudousers
+            set -- $sshusers
+            ipa hbactest --user=chad --host=$client --service=sshd --rule=sshd-$client
+            
+            set -- $sudousers
+            ipa hbactest --user=chad --host=$client --service=sudo --rule=sudo-$client
+            ipa hbactest --user=chad --host=$client --service=sudo-i --rule=sudo-i-$client
+        done
+      ignore_errors: yes
