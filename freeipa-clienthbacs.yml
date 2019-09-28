@@ -3,7 +3,6 @@
   hosts: '{{ target }}'
   gather_facts: no
   become: false
-  connection: local
   tasks:
     - name: install msktutil
       package:
