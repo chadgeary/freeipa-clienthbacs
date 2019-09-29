@@ -4,11 +4,6 @@
   gather_facts: no
   become: false
   tasks:
-    - name: install msktutil
-      package:
-        name: msktutil
-        state: present
-
     - name: add the HBACs for target client / users
       shell: |
         echo '{{ kinit_password }}' | kinit {{ kinit_user }}
