@@ -10,6 +10,7 @@
         clients='{{ client_servers }}' 
         sshusers='{{ ssh_users }}'
         sudousers='{{ sudo_users }}'
+        cronusers='{{ cron_users }}'
         for client in $clients
         do
             # add host to sudo-admins
@@ -55,7 +56,30 @@
                 ipa hbacrule-add-user sudo-$client --user=$sudouser
                 ipa hbacrule-add-user sudo-i-$client --user=$sudouser
             done
-            
+
+            # ensure service exists
+            ipa hbacsvc-add crond
+            ipa hbacsvc-add cron
+
+            # rule (allow_fqdn)
+            ipa hbacrule-add crond-$client
+            ipa hbacrule-add cron-$client
+
+            # add service to rule
+            ipa hbacrule-add-service crond-$client --hbacsvcs=crond
+            ipa hbacrule-add-service cron-$client --hbacsvcs=cron
+
+            # add host to rule
+            ipa hbacrule-add-host crond-$client --hosts=$client
+            ipa hbacrule-add-host cron-$client --hosts=$client
+
+            # add user(s) to rule
+            for cronuser in $cronusers
+            do
+                ipa hbacrule-add-user crond-$client --user=$cronuser
+                ipa hbacrule-add-user cron-$client --user=$cronuser
+            done
+
             # validation with first user in sshusers and sudousers
             set -- $sshusers
             ipa hbactest --user=chad --host=$client --service=sshd --rule=sshd-$client
@@ -63,6 +87,11 @@
             set -- $sudousers
             ipa hbactest --user=chad --host=$client --service=sudo --rule=sudo-$client
             ipa hbactest --user=chad --host=$client --service=sudo-i --rule=sudo-i-$client
+
+            set -- $cronusers
+            ipa hbactest --user=chad --host=$client --service=crond --rule=crond-$client
+            ipa hbactest --user=chad --host=$client --service=cron --rule=cron-$client
+
         done
         # remove temporary keytab file
         rm -f TMPKEYTAB
